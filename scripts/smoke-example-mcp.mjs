@@ -48,6 +48,21 @@ const getResponse = await waitUntilReachable();
 assert.equal(getResponse.status, 405, `${label}: GET /v1/mcp must return 405`);
 assert.match(getResponse.headers.get('allow') || '', /\bPOST\b/i, `${label}: missing Allow: POST`);
 
+const homeResponse = await fetch(baseUrl);
+assert.equal(homeResponse.status, 200, `${label}: home page must return 200`);
+const home = await homeResponse.text();
+const expectedWhitespaceNormalization = "excerpt.replace(/\\s+/g, ' ')";
+const brokenWhitespaceNormalization = "excerpt.replace(/s+/g, ' ')";
+assert.equal(
+  home.split(expectedWhitespaceNormalization).length - 1,
+  2,
+  `${label}: rendered observatory must preserve both whitespace regexes`,
+);
+assert.ok(
+  !home.includes(brokenWhitespaceNormalization),
+  `${label}: rendered observatory must not turn /\\s+/ into /s+/`,
+);
+
 const optionsResponse = await fetch(endpoint, {
   method: 'OPTIONS',
   headers: {
